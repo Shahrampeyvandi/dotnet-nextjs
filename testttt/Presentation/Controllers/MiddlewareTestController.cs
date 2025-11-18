@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace testttt.Controllers;
+namespace testttt.Presentation.Controllers;
 
 /// <summary>
 /// Controller برای تست middlewareهای مختلف
@@ -179,4 +179,3 @@ public class TestRequest
     public string Email { get; set; } = string.Empty;
     public Dictionary<string, object>? AdditionalData { get; set; }
 }
-

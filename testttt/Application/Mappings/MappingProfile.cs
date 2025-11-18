@@ -65,8 +65,10 @@ public static class MappingProfile
             CreatedAt = order.CreatedAt,
             UpdatedAt = order.UpdatedAt,
             CustomerId = order.CustomerId,
-            CustomerName = $"{order.Customer.FirstName} {order.Customer.LastName}",
-            CustomerEmail = order.Customer.Email,
+            CustomerName = order.User != null 
+                ? $"{order.User.FirstName} {order.User.LastName}"
+                : $"{order.Customer.FirstName} {order.Customer.LastName}",
+            CustomerEmail = order.User?.Email ?? order.Customer.Email,
             OrderItems = order.OrderItems.Select(oi => new OrderItemDto
             {
                 Id = oi.Id,
@@ -76,6 +78,23 @@ public static class MappingProfile
                 ProductId = oi.ProductId,
                 ProductName = oi.Product?.Name
             }).ToList()
+        };
+    }
+
+    public static UserDto ToDto(this User user)
+    {
+        return new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Phone = user.Phone,
+            Address = user.Address,
+            City = user.City,
+            PostalCode = user.PostalCode,
+            CreatedAt = user.CreatedAt
         };
     }
 }

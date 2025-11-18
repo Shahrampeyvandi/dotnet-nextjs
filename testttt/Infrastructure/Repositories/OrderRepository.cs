@@ -15,6 +15,7 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     {
         return await _dbSet
             .Include(o => o.Customer)
+            .Include(o => o.User)
             .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
             .OrderByDescending(o => o.OrderDate)
@@ -25,6 +26,7 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     {
         return await _dbSet
             .Include(o => o.Customer)
+            .Include(o => o.User)
             .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
             .FirstOrDefaultAsync(o => o.Id == id);
@@ -34,6 +36,7 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     {
         return await _dbSet
             .Include(o => o.Customer)
+            .Include(o => o.User)
             .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
             .OrderByDescending(o => o.OrderDate)
@@ -44,6 +47,7 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     {
         return await _dbSet
             .Include(o => o.Customer)
+            .Include(o => o.User)
             .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
             .FirstOrDefaultAsync(o => o.OrderNumber == orderNumber);

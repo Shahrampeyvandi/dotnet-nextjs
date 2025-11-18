@@ -9,15 +9,18 @@ public class OrderService : IOrderService
 {
     private readonly IOrderRepository _orderRepository;
     private readonly ICustomerRepository _customerRepository;
+    private readonly IUserRepository _userRepository;
     private readonly IProductRepository _productRepository;
 
     public OrderService(
         IOrderRepository orderRepository,
         ICustomerRepository customerRepository,
+        IUserRepository userRepository,
         IProductRepository productRepository)
     {
         _orderRepository = orderRepository;
         _customerRepository = customerRepository;
+        _userRepository = userRepository;
         _productRepository = productRepository;
     }
 
@@ -35,10 +38,29 @@ public class OrderService : IOrderService
 
     public async Task<OrderDto> CreateOrderAsync(CreateOrderDto createDto)
     {
-        var customer = await _customerRepository.GetByIdAsync(createDto.CustomerId);
-        if (customer == null)
+        Customer? customer = null;
+        if (createDto.CustomerId.HasValue)
         {
-            throw new KeyNotFoundException("Customer not found.");
+            customer = await _customerRepository.GetByIdAsync(createDto.CustomerId.Value);
+            if (customer == null)
+            {
+                throw new KeyNotFoundException("Customer not found.");
+            }
+        }
+
+        Domain.Entities.User? user = null;
+        if (createDto.UserId.HasValue)
+        {
+            user = await _userRepository.GetByIdAsync(createDto.UserId.Value);
+            if (user == null)
+            {
+                throw new KeyNotFoundException("User not found.");
+            }
+        }
+
+        if (customer == null && user == null)
+        {
+            throw new InvalidOperationException("Either CustomerId or UserId must be provided.");
         }
 
         if (createDto.OrderItems == null || !createDto.OrderItems.Any())
@@ -96,7 +118,8 @@ public class OrderService : IOrderService
             TotalAmount = totalAmount,
             Status = "Pending",
             ShippingAddress = createDto.ShippingAddress,
-            CustomerId = createDto.CustomerId,
+            CustomerId = customer?.Id ?? 0,
+            UserId = user?.Id,
             CreatedAt = DateTime.UtcNow,
             OrderItems = orderItems
         };

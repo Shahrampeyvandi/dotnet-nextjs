@@ -11,11 +11,13 @@ public class Order
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 
-    // Foreign key
+    // Foreign keys
     public int CustomerId { get; set; }
+    public int? UserId { get; set; }
 
     // Navigation properties
     public virtual Customer Customer { get; set; } = null!;
+    public virtual User? User { get; set; }
     public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 }
 
