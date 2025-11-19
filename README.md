@@ -65,12 +65,7 @@ dotnet restore
 }
 ```
 
-3. اجرای Migration:
-```bash
-dotnet ef database update --context ECommerceDbContext
-```
-
-4. اجرای پروژه:
+3. اجرای پروژه (دیتابیس به صورت خودکار ایجاد می‌شود):
 ```bash
 dotnet run
 ```
@@ -113,8 +108,7 @@ testttt/
 │   └── Repositories/      # Repository Implementations
 ├── Presentation/          # Presentation Layer
 │   └── Controllers/       # API Controllers
-├── Middleware/            # Custom Middleware
-└── Migrations/            # Database Migrations
+└── Middleware/            # Custom Middleware
 
 frontend/
 ├── app/                   # Next.js Pages
