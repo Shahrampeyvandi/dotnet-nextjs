@@ -49,7 +49,18 @@ public class RequestResponseLoggingMiddleware
 
         _logger.LogInformation("=== پاسخ خروجی ===");
         _logger.LogInformation($"Status Code: {context.Response.StatusCode}");
-        _logger.LogInformation($"Response Body: {responseText}");
+        
+        // محدود کردن اندازه Response Body برای جلوگیری از لاگ‌های خیلی بزرگ
+        // (مثلاً HTML صفحات Swagger می‌توانند خیلی بزرگ باشند)
+        const int maxLogLength = 10000; // حداکثر 10000 کاراکتر
+        if (responseText.Length > maxLogLength)
+        {
+            _logger.LogInformation($"Response Body (truncated to {maxLogLength} chars): {responseText.Substring(0, maxLogLength)}... [Total length: {responseText.Length} chars]");
+        }
+        else
+        {
+            _logger.LogInformation($"Response Body: {responseText}");
+        }
 
         // کپی کردن پاسخ به stream اصلی
         await responseBody.CopyToAsync(originalBodyStream);

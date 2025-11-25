@@ -17,6 +17,7 @@ public class ECommerceDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<Log> Logs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -109,6 +110,21 @@ public class ECommerceDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(p => p.OrderItems)
                 .HasForeignKey(e => e.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Log configuration
+        modelBuilder.Entity<Log>(entity =>
+        {
+            entity.ToTable("Logs");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Message).IsRequired().HasMaxLength(4000);
+            entity.Property(e => e.MessageTemplate).HasMaxLength(2000);
+            entity.Property(e => e.Level).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Exception).HasMaxLength(8000);
+            entity.Property(e => e.Properties).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.LogEvent).HasColumnType("nvarchar(max)");
+            entity.HasIndex(e => e.TimeStamp);
+            entity.HasIndex(e => e.Level);
         });
     }
 }

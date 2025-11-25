@@ -1,14 +1,72 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using Serilog.Sinks.MSSqlServer;
 using testttt.Application.Interfaces;
 using testttt.Application.Services;
 using testttt.Domain.Entities;
 using testttt.Infrastructure.Data;
 using testttt.Infrastructure.Repositories;
 using testttt.Presentation.Middleware;
-using Microsoft.AspNetCore.Http;
+using Log = Serilog.Log;
+
+// فعال کردن SelfLog برای مشاهده خطاهای Serilog
+Serilog.Debugging.SelfLog.Enable(Console.Error);
+
+// Configure Serilog قبل از ایجاد builder
+var tempConfig = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", optional: true)
+    .AddEnvironmentVariables()
+    .Build();
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(tempConfig)
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .Enrich.WithThreadId()
+    .CreateLogger();
+
+
+Log.Information("Starting web application");
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Use Serilog for logging - read from configuration
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .Enrich.WithThreadId()
+    // اضافه کردن MSSqlServer sink با فیلتر برای حذف لاگ‌های Microsoft.AspNetCore از دیتابیس
+    // لاگ‌های Microsoft.AspNetCore فقط در Console نمایش داده می‌شوند، نه در دیتابیس
+    .WriteTo.Logger(lc => lc
+        .Filter.ByExcluding(logEvent => 
+        {
+            // فیلتر کردن لاگ‌های Microsoft.AspNetCore از دیتابیس
+            if (logEvent.Properties.TryGetValue("SourceContext", out var sourceContext))
+            {
+                var sourceContextValue = sourceContext.ToString();
+                // حذف کوتیشن‌ها از ابتدا و انتها (Serilog ممکن است آنها را اضافه کند)
+                var cleanValue = sourceContextValue.Trim('"', '\'');
+                return cleanValue.StartsWith("Microsoft.AspNetCore", StringComparison.OrdinalIgnoreCase);
+            }
+            return false;
+        })
+        .WriteTo.MSSqlServer(
+            connectionString: context.Configuration.GetConnectionString("DefaultConnection") ?? 
+                             "Server=.;Database=ECommerceDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True",
+            sinkOptions: new MSSqlServerSinkOptions
+            {
+                TableName = "Logs",
+                SchemaName = "dbo",
+                AutoCreateSqlTable = false, // چون در Program.cs ایجاد می‌کنیم
+                BatchPostingLimit = 1,
+                EagerlyEmitFirstEvent = true // برای اطمینان از نوشتن فوری اولین لاگ
+            },
+            restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information));
 
 // Add services to the container.
 
@@ -25,15 +83,15 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequireUppercase = false;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequiredLength = 6;
-    
+
     // User settings
     options.User.RequireUniqueEmail = true;
-    
+
     // Lockout settings
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.AllowedForNewUsers = true;
-    
+
     // SignIn settings
     options.SignIn.RequireConfirmedEmail = false;
     options.SignIn.RequireConfirmedPhoneNumber = false;
@@ -107,13 +165,113 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Seed Data
+// Apply migrations automatically
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ECommerceDbContext>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-    await testttt.Infrastructure.Data.DbSeeder.SeedDataAsync(context, userManager);
+    try
+    {
+        await context.Database.MigrateAsync();
+        Log.Information("Database migrations applied successfully");
+        
+        // بررسی و ایجاد جدول Logs در صورت عدم وجود (ساختار استاندارد Serilog MSSqlServer)
+        try
+        {
+            // بررسی وجود جدول
+            var tableExists = await context.Database.ExecuteSqlRawAsync(@"
+                SELECT CASE 
+                    WHEN EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Logs]') AND type in (N'U'))
+                    THEN 1 ELSE 0 END");
+            
+            // اگر جدول وجود ندارد، ایجاد کن
+            await context.Database.ExecuteSqlRawAsync(@"
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Logs]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[Logs] (
+                        [Id] INT IDENTITY(1,1) NOT NULL,
+                        [Message] NVARCHAR(MAX) NULL,
+                        [MessageTemplate] NVARCHAR(MAX) NULL,
+                        [Level] NVARCHAR(128) NULL,
+                        [TimeStamp] DATETIME2 NOT NULL,
+                        [Exception] NVARCHAR(MAX) NULL,
+                        [Properties] NVARCHAR(MAX) NULL,
+                        [LogEvent] NVARCHAR(MAX) NULL,
+                        CONSTRAINT [PK_Logs] PRIMARY KEY CLUSTERED ([Id] ASC)
+                    );
+                    
+                    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Logs_TimeStamp' AND object_id = OBJECT_ID(N'[dbo].[Logs]'))
+                        CREATE NONCLUSTERED INDEX [IX_Logs_TimeStamp] ON [dbo].[Logs] ([TimeStamp] DESC);
+                    
+                    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Logs_Level' AND object_id = OBJECT_ID(N'[dbo].[Logs]'))
+                        CREATE NONCLUSTERED INDEX [IX_Logs_Level] ON [dbo].[Logs] ([Level] ASC);
+                END");
+            
+            // اگر جدول از قبل وجود دارد، مطمئن شو که ستون Message به NVARCHAR(MAX) است
+            // این برای اصلاح جداول قدیمی که با NVARCHAR(4000) ایجاد شده‌اند
+            try
+            {
+                await context.Database.ExecuteSqlRawAsync(@"
+                    IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Logs]') AND type in (N'U'))
+                    BEGIN
+                        -- تغییر ستون Message به NVARCHAR(MAX) در صورت نیاز
+                        ALTER TABLE [dbo].[Logs] ALTER COLUMN [Message] NVARCHAR(MAX) NULL;
+                        
+                        -- تغییر ستون MessageTemplate به NVARCHAR(MAX) در صورت نیاز
+                        IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Logs]') AND name = 'MessageTemplate')
+                            ALTER TABLE [dbo].[Logs] ALTER COLUMN [MessageTemplate] NVARCHAR(MAX) NULL;
+                        
+                        -- تغییر ستون Level به NVARCHAR(128) در صورت نیاز
+                        IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Logs]') AND name = 'Level')
+                            ALTER TABLE [dbo].[Logs] ALTER COLUMN [Level] NVARCHAR(128) NULL;
+                    END");
+                Log.Information("Logs table columns verified/updated to support large messages");
+            }
+            catch (Exception alterEx)
+            {
+                Log.Warning(alterEx, "Could not alter Logs table columns. This is normal if columns are already correct.");
+            }
+            
+            Log.Information("Logs table checked/created successfully");
+            
+            // تست نوشتن یک لاگ در دیتابیس
+            try
+            {
+                await context.Database.ExecuteSqlRawAsync(@"
+                    INSERT INTO [dbo].[Logs] ([Message], [Level], [TimeStamp])
+                    VALUES (N'Test log entry - Table creation verified', N'Information', GETUTCDATE())");
+                Log.Information("Test log entry written to database successfully");
+            }
+            catch (Exception testEx)
+            {
+                Log.Error(testEx, "Failed to write test log entry to database");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Could not create or verify Logs table. Error details: {ErrorMessage}", ex.Message);
+        }
+    }
+    catch (Exception ex)
+    {
+        Log.Fatal(ex, "Failed to apply database migrations");
+        throw;
+    }
 }
+
+// Seed Data
+//using (var scope = app.Services.CreateScope())
+//{
+//    var context = scope.ServiceProvider.GetRequiredService<ECommerceDbContext>();
+//    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+//    await testttt.Infrastructure.Data.DbSeeder.SeedDataAsync(context, userManager);
+//}
+
+//// اگر argument --migrate-only وجود داشت، فقط Migration را اجرا می‌کند و برنامه را می‌بندد
+//if (args.Contains("--migrate-only"))
+//{
+//    Log.Information("Migration and seeding completed. Exiting...");
+//    return;
+//}
 
 // ============================================
 // سفارشی Middleware ها - از ساده به پیشرفته
@@ -160,8 +318,36 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// فقط در Production از HTTPS redirect استفاده کنیم (برای اجرای روی HTTP در Development)
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
+// Use Serilog Request Logging
+app.UseSerilogRequestLogging(options =>
+{
+    options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+    options.GetLevel = (httpContext, elapsed, ex) => ex != null
+        ? Serilog.Events.LogEventLevel.Error
+        : elapsed > 500
+            ? Serilog.Events.LogEventLevel.Warning
+            : Serilog.Events.LogEventLevel.Information;
+});
 
 app.MapControllers();
 
-app.Run();
+try
+{
+    Log.Information("Application started successfully");
+    await app.RunAsync();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+    throw;
+}
+finally
+{
+    Log.CloseAndFlush();
+}
