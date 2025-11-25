@@ -43,7 +43,7 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
     // اضافه کردن MSSqlServer sink با فیلتر برای حذف لاگ‌های Microsoft.AspNetCore از دیتابیس
     // لاگ‌های Microsoft.AspNetCore فقط در Console نمایش داده می‌شوند، نه در دیتابیس
     .WriteTo.Logger(lc => lc
-        .Filter.ByExcluding(logEvent => 
+        .Filter.ByExcluding(logEvent =>
         {
             // فیلتر کردن لاگ‌های Microsoft.AspNetCore از دیتابیس
             if (logEvent.Properties.TryGetValue("SourceContext", out var sourceContext))
@@ -56,7 +56,7 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
             return false;
         })
         .WriteTo.MSSqlServer(
-            connectionString: context.Configuration.GetConnectionString("DefaultConnection") ?? 
+            connectionString: context.Configuration.GetConnectionString("DefaultConnection") ??
                              "Server=.;Database=ECommerceDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True",
             sinkOptions: new MSSqlServerSinkOptions
             {
@@ -66,7 +66,7 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
                 BatchPostingLimit = 1,
                 EagerlyEmitFirstEvent = true // برای اطمینان از نوشتن فوری اولین لاگ
             },
-            restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information));
+            restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information)));
 
 // Add services to the container.
 
@@ -173,7 +173,7 @@ using (var scope = app.Services.CreateScope())
     {
         await context.Database.MigrateAsync();
         Log.Information("Database migrations applied successfully");
-        
+
         // بررسی و ایجاد جدول Logs در صورت عدم وجود (ساختار استاندارد Serilog MSSqlServer)
         try
         {
@@ -182,7 +182,7 @@ using (var scope = app.Services.CreateScope())
                 SELECT CASE 
                     WHEN EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Logs]') AND type in (N'U'))
                     THEN 1 ELSE 0 END");
-            
+
             // اگر جدول وجود ندارد، ایجاد کن
             await context.Database.ExecuteSqlRawAsync(@"
                 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Logs]') AND type in (N'U'))
@@ -205,7 +205,7 @@ using (var scope = app.Services.CreateScope())
                     IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Logs_Level' AND object_id = OBJECT_ID(N'[dbo].[Logs]'))
                         CREATE NONCLUSTERED INDEX [IX_Logs_Level] ON [dbo].[Logs] ([Level] ASC);
                 END");
-            
+
             // اگر جدول از قبل وجود دارد، مطمئن شو که ستون Message به NVARCHAR(MAX) است
             // این برای اصلاح جداول قدیمی که با NVARCHAR(4000) ایجاد شده‌اند
             try
@@ -230,9 +230,9 @@ using (var scope = app.Services.CreateScope())
             {
                 Log.Warning(alterEx, "Could not alter Logs table columns. This is normal if columns are already correct.");
             }
-            
+
             Log.Information("Logs table checked/created successfully");
-            
+
             // تست نوشتن یک لاگ در دیتابیس
             try
             {
