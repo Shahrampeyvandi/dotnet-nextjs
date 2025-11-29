@@ -60,7 +60,10 @@ public class AuthController : ControllerBase
             // Sign in کاربر بعد از ثبت‌نام
             await _signInManager.SignInAsync(user, isPersistent: false);
 
-            return Ok(user.ToDto());
+            var userDto = user.ToDto();
+            var roles = await _userManager.GetRolesAsync(user);
+            userDto.Roles = roles.ToList();
+            return Ok(userDto);
         }
         catch (Exception ex)
         {
@@ -96,7 +99,10 @@ public class AuthController : ControllerBase
             return Unauthorized("Invalid username or password");
         }
 
-        return Ok(user.ToDto());
+        var userDto = user.ToDto();
+        var roles = await _userManager.GetRolesAsync(user);
+        userDto.Roles = roles.ToList();
+        return Ok(userDto);
     }
 
     [HttpPost("logout")]
@@ -115,7 +121,12 @@ public class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        return Ok(user.ToDto());
+        var userDto = user.ToDto();
+        // Get user roles
+        var roles = await _userManager.GetRolesAsync(user);
+        userDto.Roles = roles.ToList();
+
+        return Ok(userDto);
     }
 }
 

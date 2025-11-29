@@ -17,8 +17,16 @@ public class OrdersController : ControllerBase
 
     // GET: api/Orders
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<OrderDto>>> GetOrders()
+    public async Task<ActionResult<IEnumerable<OrderDto>>> GetOrders([FromQuery] int? page, [FromQuery] int? pageSize)
     {
+        // If pagination parameters are provided, return paginated response
+        if (page.HasValue && pageSize.HasValue)
+        {
+            var paginatedOrders = await _orderService.GetPaginatedOrdersAsync(page.Value, pageSize.Value);
+            return Ok(paginatedOrders);
+        }
+        
+        // Otherwise, return all orders (backward compatibility)
         var orders = await _orderService.GetAllOrdersAsync();
         return Ok(orders);
     }

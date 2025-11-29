@@ -49,6 +49,36 @@ public class OrderService : IOrderService
         }
     }
 
+    public async Task<PaginatedResponse<OrderDto>> GetPaginatedOrdersAsync(int pageNumber, int pageSize)
+    {
+        _logger.LogInformation("Getting paginated orders. Page: {PageNumber}, PageSize: {PageSize}", pageNumber, pageSize);
+        try
+        {
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 10;
+            if (pageSize > 100) pageSize = 100; // Limit max page size
+
+            var (orders, totalCount) = await _orderRepository.GetPaginatedWithDetailsAsync(pageNumber, pageSize);
+            var orderDtos = orders.Select(o => o.ToDto()).ToList();
+
+            _logger.LogInformation("Retrieved {Count} orders (page {PageNumber} of {TotalPages})", 
+                orderDtos.Count, pageNumber, (int)Math.Ceiling(totalCount / (double)pageSize));
+
+            return new PaginatedResponse<OrderDto>
+            {
+                Data = orderDtos,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = totalCount
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while getting paginated orders");
+            throw;
+        }
+    }
+
     public async Task<OrderDto?> GetOrderByIdAsync(int id)
     {
         _logger.LogInformation("Getting order by ID: {OrderId}", id);

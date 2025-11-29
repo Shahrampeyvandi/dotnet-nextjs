@@ -95,7 +95,8 @@ public static class MappingProfile
             Address = user.Address,
             City = user.City,
             PostalCode = user.PostalCode,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            Roles = new List<string>() // Roles will be set separately in controller
         };
     }
 }

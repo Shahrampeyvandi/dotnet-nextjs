@@ -52,5 +52,24 @@ public class OrderRepository : Repository<Order>, IOrderRepository
                 .ThenInclude(oi => oi.Product)
             .FirstOrDefaultAsync(o => o.OrderNumber == orderNumber);
     }
+
+    public async Task<(IEnumerable<Order> Orders, int TotalCount)> GetPaginatedWithDetailsAsync(int pageNumber, int pageSize)
+    {
+        var query = _dbSet
+            .Include(o => o.Customer)
+            .Include(o => o.User)
+            .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+            .OrderByDescending(o => o.OrderDate);
+
+        var totalCount = await query.CountAsync();
+        
+        var orders = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (orders, totalCount);
+    }
 }
 
