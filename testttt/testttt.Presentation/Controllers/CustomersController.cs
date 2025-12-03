@@ -1,6 +1,8 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using testttt.Application.Commands.Customers;
 using testttt.Application.DTOs;
-using testttt.Application.Interfaces;
+using testttt.Application.Queries.Customers;
 
 namespace testttt.Presentation.Controllers;
 
@@ -8,18 +10,19 @@ namespace testttt.Presentation.Controllers;
 [Route("api/[controller]")]
 public class CustomersController : ControllerBase
 {
-    private readonly ICustomerService _customerService;
+    private readonly IMediator _mediator;
 
-    public CustomersController(ICustomerService customerService)
+    public CustomersController(IMediator mediator)
     {
-        _customerService = customerService;
+        _mediator = mediator;
     }
 
     // GET: api/Customers
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CustomerDto>>> GetCustomers()
     {
-        var customers = await _customerService.GetAllCustomersAsync();
+        var query = new GetAllCustomersQuery();
+        var customers = await _mediator.Send(query);
         return Ok(customers);
     }
 
@@ -27,7 +30,8 @@ public class CustomersController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<CustomerDto>> GetCustomer(int id)
     {
-        var customer = await _customerService.GetCustomerByIdAsync(id);
+        var query = new GetCustomerByIdQuery { Id = id };
+        var customer = await _mediator.Send(query);
 
         if (customer == null)
         {
@@ -43,7 +47,17 @@ public class CustomersController : ControllerBase
     {
         try
         {
-            var customer = await _customerService.CreateCustomerAsync(createDto);
+            var command = new CreateCustomerCommand
+            {
+                FirstName = createDto.FirstName,
+                LastName = createDto.LastName,
+                Email = createDto.Email,
+                Phone = createDto.Phone,
+                Address = createDto.Address,
+                City = createDto.City,
+                PostalCode = createDto.PostalCode
+            };
+            var customer = await _mediator.Send(command);
             return CreatedAtAction(nameof(GetCustomer), new { id = customer.Id }, customer);
         }
         catch (InvalidOperationException ex)
@@ -58,7 +72,18 @@ public class CustomersController : ControllerBase
     {
         try
         {
-            await _customerService.UpdateCustomerAsync(id, updateDto);
+            var command = new UpdateCustomerCommand
+            {
+                Id = id,
+                FirstName = updateDto.FirstName,
+                LastName = updateDto.LastName,
+                Email = updateDto.Email,
+                Phone = updateDto.Phone,
+                Address = updateDto.Address,
+                City = updateDto.City,
+                PostalCode = updateDto.PostalCode
+            };
+            await _mediator.Send(command);
             return NoContent();
         }
         catch (KeyNotFoundException)
@@ -77,7 +102,8 @@ public class CustomersController : ControllerBase
     {
         try
         {
-            await _customerService.DeleteCustomerAsync(id);
+            var command = new DeleteCustomerCommand { Id = id };
+            await _mediator.Send(command);
             return NoContent();
         }
         catch (KeyNotFoundException)

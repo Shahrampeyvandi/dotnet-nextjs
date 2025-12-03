@@ -1,6 +1,8 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using testttt.Application.Commands.Orders;
 using testttt.Application.DTOs;
-using testttt.Application.Interfaces;
+using testttt.Application.Queries.Orders;
 
 namespace testttt.Presentation.Controllers;
 
@@ -8,11 +10,11 @@ namespace testttt.Presentation.Controllers;
 [Route("api/[controller]")]
 public class OrdersController : ControllerBase
 {
-    private readonly IOrderService _orderService;
+    private readonly IMediator _mediator;
 
-    public OrdersController(IOrderService orderService)
+    public OrdersController(IMediator mediator)
     {
-        _orderService = orderService;
+        _mediator = mediator;
     }
 
     // GET: api/Orders
@@ -22,12 +24,18 @@ public class OrdersController : ControllerBase
         // If pagination parameters are provided, return paginated response
         if (page.HasValue && pageSize.HasValue)
         {
-            var paginatedOrders = await _orderService.GetPaginatedOrdersAsync(page.Value, pageSize.Value);
+            var query = new GetPaginatedOrdersQuery
+            {
+                PageNumber = page.Value,
+                PageSize = pageSize.Value
+            };
+            var paginatedOrders = await _mediator.Send(query);
             return Ok(paginatedOrders);
         }
         
         // Otherwise, return all orders (backward compatibility)
-        var orders = await _orderService.GetAllOrdersAsync();
+        var getAllQuery = new GetAllOrdersQuery();
+        var orders = await _mediator.Send(getAllQuery);
         return Ok(orders);
     }
 
@@ -35,7 +43,8 @@ public class OrdersController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<OrderDto>> GetOrder(int id)
     {
-        var order = await _orderService.GetOrderByIdAsync(id);
+        var query = new GetOrderByIdQuery { Id = id };
+        var order = await _mediator.Send(query);
 
         if (order == null)
         {
@@ -51,7 +60,14 @@ public class OrdersController : ControllerBase
     {
         try
         {
-            var order = await _orderService.CreateOrderAsync(createDto);
+            var command = new CreateOrderCommand
+            {
+                CustomerId = createDto.CustomerId,
+                UserId = createDto.UserId,
+                ShippingAddress = createDto.ShippingAddress,
+                OrderItems = createDto.OrderItems
+            };
+            var order = await _mediator.Send(command);
             return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, order);
         }
         catch (KeyNotFoundException ex)
@@ -70,7 +86,13 @@ public class OrdersController : ControllerBase
     {
         try
         {
-            await _orderService.UpdateOrderAsync(id, updateDto);
+            var command = new UpdateOrderCommand
+            {
+                Id = id,
+                Status = updateDto.Status,
+                ShippingAddress = updateDto.ShippingAddress
+            };
+            await _mediator.Send(command);
             return NoContent();
         }
         catch (KeyNotFoundException)
@@ -85,7 +107,8 @@ public class OrdersController : ControllerBase
     {
         try
         {
-            await _orderService.DeleteOrderAsync(id);
+            var command = new DeleteOrderCommand { Id = id };
+            await _mediator.Send(command);
             return NoContent();
         }
         catch (KeyNotFoundException)
@@ -98,7 +121,8 @@ public class OrdersController : ControllerBase
     [HttpGet("invoices")]
     public async Task<ActionResult<IEnumerable<OrderDto>>> GetInvoices()
     {
-        var invoices = await _orderService.GetInvoicesAsync();
+        var query = new GetInvoicesQuery();
+        var invoices = await _mediator.Send(query);
         return Ok(invoices);
     }
 }

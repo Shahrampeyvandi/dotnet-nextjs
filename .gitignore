@@ -154,3 +154,7 @@ frontend/.vercel
 .DS_Store
 Thumbs.db
 
+# Uploaded files (keep directory structure with .gitkeep)
+testttt/testttt.Presentation/wwwroot/uploads/**/*
+!testttt/testttt.Presentation/wwwroot/uploads/**/.gitkeep
+

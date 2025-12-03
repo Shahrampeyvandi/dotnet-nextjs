@@ -1,6 +1,8 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using testttt.Application.Commands.Categories;
 using testttt.Application.DTOs;
-using testttt.Application.Interfaces;
+using testttt.Application.Queries.Categories;
 
 namespace testttt.Presentation.Controllers;
 
@@ -8,18 +10,19 @@ namespace testttt.Presentation.Controllers;
 [Route("api/[controller]")]
 public class CategoriesController : ControllerBase
 {
-    private readonly ICategoryService _categoryService;
+    private readonly IMediator _mediator;
 
-    public CategoriesController(ICategoryService categoryService)
+    public CategoriesController(IMediator mediator)
     {
-        _categoryService = categoryService;
+        _mediator = mediator;
     }
 
     // GET: api/Categories
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategories()
     {
-        var categories = await _categoryService.GetAllCategoriesAsync();
+        var query = new GetAllCategoriesQuery();
+        var categories = await _mediator.Send(query);
         return Ok(categories);
     }
 
@@ -27,7 +30,8 @@ public class CategoriesController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<CategoryDto>> GetCategory(int id)
     {
-        var category = await _categoryService.GetCategoryByIdAsync(id);
+        var query = new GetCategoryByIdQuery { Id = id };
+        var category = await _mediator.Send(query);
 
         if (category == null)
         {
@@ -43,7 +47,12 @@ public class CategoriesController : ControllerBase
     {
         try
         {
-            var category = await _categoryService.CreateCategoryAsync(createDto);
+            var command = new CreateCategoryCommand
+            {
+                Name = createDto.Name,
+                Description = createDto.Description
+            };
+            var category = await _mediator.Send(command);
             return CreatedAtAction(nameof(GetCategory), new { id = category.Id }, category);
         }
         catch (Exception ex)
@@ -58,7 +67,13 @@ public class CategoriesController : ControllerBase
     {
         try
         {
-            await _categoryService.UpdateCategoryAsync(id, updateDto);
+            var command = new UpdateCategoryCommand
+            {
+                Id = id,
+                Name = updateDto.Name,
+                Description = updateDto.Description
+            };
+            await _mediator.Send(command);
             return NoContent();
         }
         catch (KeyNotFoundException)
@@ -77,7 +92,8 @@ public class CategoriesController : ControllerBase
     {
         try
         {
-            await _categoryService.DeleteCategoryAsync(id);
+            var command = new DeleteCategoryCommand { Id = id };
+            await _mediator.Send(command);
             return NoContent();
         }
         catch (KeyNotFoundException)

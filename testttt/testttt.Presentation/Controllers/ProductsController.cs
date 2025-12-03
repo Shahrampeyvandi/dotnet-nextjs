@@ -1,6 +1,8 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using testttt.Application.Commands.Products;
 using testttt.Application.DTOs;
-using testttt.Application.Interfaces;
+using testttt.Application.Queries.Products;
 
 namespace testttt.Presentation.Controllers;
 
@@ -8,18 +10,19 @@ namespace testttt.Presentation.Controllers;
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
 {
-    private readonly IProductService _productService;
+    private readonly IMediator _mediator;
 
-    public ProductsController(IProductService productService)
+    public ProductsController(IMediator mediator)
     {
-        _productService = productService;
+        _mediator = mediator;
     }
 
     // GET: api/Products
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
     {
-        var products = await _productService.GetAllProductsAsync();
+        var query = new GetAllProductsQuery();
+        var products = await _mediator.Send(query);
         return Ok(products);
     }
 
@@ -27,7 +30,8 @@ public class ProductsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<ProductDto>> GetProduct(int id)
     {
-        var product = await _productService.GetProductByIdAsync(id);
+        var query = new GetProductByIdQuery { Id = id };
+        var product = await _mediator.Send(query);
 
         if (product == null)
         {
@@ -43,7 +47,17 @@ public class ProductsController : ControllerBase
     {
         try
         {
-            var product = await _productService.CreateProductAsync(createDto);
+            var command = new CreateProductCommand
+            {
+                Name = createDto.Name,
+                Description = createDto.Description,
+                Price = createDto.Price,
+                StockQuantity = createDto.StockQuantity,
+                ImageUrl = createDto.ImageUrl,
+                IsActive = createDto.IsActive,
+                CategoryId = createDto.CategoryId
+            };
+            var product = await _mediator.Send(command);
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }
         catch (KeyNotFoundException ex)
@@ -62,7 +76,18 @@ public class ProductsController : ControllerBase
     {
         try
         {
-            await _productService.UpdateProductAsync(id, updateDto);
+            var command = new UpdateProductCommand
+            {
+                Id = id,
+                Name = updateDto.Name,
+                Description = updateDto.Description,
+                Price = updateDto.Price,
+                StockQuantity = updateDto.StockQuantity,
+                ImageUrl = updateDto.ImageUrl,
+                IsActive = updateDto.IsActive,
+                CategoryId = updateDto.CategoryId
+            };
+            await _mediator.Send(command);
             return NoContent();
         }
         catch (KeyNotFoundException)
@@ -81,7 +106,8 @@ public class ProductsController : ControllerBase
     {
         try
         {
-            await _productService.DeleteProductAsync(id);
+            var command = new DeleteProductCommand { Id = id };
+            await _mediator.Send(command);
             return NoContent();
         }
         catch (KeyNotFoundException)

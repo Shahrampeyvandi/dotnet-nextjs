@@ -113,7 +113,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LogoutPath = "/api/Auth/logout";
 });
 
-// Add MediatR for event-driven architecture
+// Add MediatR for CQRS and event-driven architecture
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(testttt.Application.Services.OtpService).Assembly));
 
 // Register Repositories
@@ -330,6 +330,9 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
+
+// Enable static file serving for uploaded images
+app.UseStaticFiles();
 
 // Use Serilog Request Logging
 app.UseSerilogRequestLogging(options =>
