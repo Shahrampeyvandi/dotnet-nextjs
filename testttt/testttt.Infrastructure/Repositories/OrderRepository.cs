@@ -1,4 +1,6 @@
+using Dapper;
 using Microsoft.EntityFrameworkCore;
+using testttt.Application.DTOs;
 using testttt.Application.Interfaces;
 using testttt.Domain.Entities;
 using testttt.Infrastructure.Data;
@@ -53,23 +55,69 @@ public class OrderRepository : Repository<Order>, IOrderRepository
             .FirstOrDefaultAsync(o => o.OrderNumber == orderNumber);
     }
 
-    public async Task<(IEnumerable<Order> Orders, int TotalCount)> GetPaginatedWithDetailsAsync(int pageNumber, int pageSize)
+    public async Task<(IEnumerable<OrderListDto> Orders, int TotalCount)> GetPaginatedWithDetailsAsync(int pageNumber, int pageSize)
     {
-        var query = _dbSet
-            .Include(o => o.Customer)
-            .Include(o => o.User)
-            .Include(o => o.OrderItems)
-                .ThenInclude(oi => oi.Product)
-            .OrderByDescending(o => o.OrderDate);
-
-        var totalCount = await query.CountAsync();
+        var connection = _context.Database.GetDbConnection();
+        var wasOpen = connection.State == System.Data.ConnectionState.Open;
         
-        var orders = await query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+        if (!wasOpen)
+        {
+            await connection.OpenAsync();
+        }
 
-        return (orders, totalCount);
+        try
+        {
+            var parameters = new DynamicParameters();
+            parameters.Add("@PageNumber", pageNumber);
+            parameters.Add("@PageSize", pageSize);
+            parameters.Add("@TotalCount", dbType: System.Data.DbType.Int32, direction: System.Data.ParameterDirection.Output);
+
+            using var multi = await connection.QueryMultipleAsync(
+                "[dbo].[GetPaginatedOrders]",
+                parameters,
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+
+            // First result set: Orders with customer/user info
+            var ordersData = (await multi.ReadAsync<dynamic>()).ToList();
+            
+            // Second result set: Item counts per order
+            var itemCounts = (await multi.ReadAsync<dynamic>()).ToDictionary(
+                x => (int)x.OrderId,
+                x => (int)x.ItemsCount
+            );
+
+            // Map to OrderListDto and attach item counts
+            var orders = ordersData.Select(x => new OrderListDto
+            {
+                Id = (int)x.Id,
+                OrderNumber = (string)x.OrderNumber,
+                OrderDate = (DateTime)x.OrderDate,
+                TotalAmount = (decimal)x.TotalAmount,
+                Status = (string)x.Status,
+                ShippingAddress = x.ShippingAddress as string,
+                CreatedAt = (DateTime)x.CreatedAt,
+                UpdatedAt = x.UpdatedAt as DateTime?,
+                CustomerId = x.CustomerId as int?,
+                UserId = x.UserId as string,
+                CustomerName = x.CustomerName as string,
+                CustomerEmail = x.CustomerEmail as string,
+                CustomerPhone = x.CustomerPhone as string,
+                ItemsCount = itemCounts.TryGetValue((int)x.Id, out var count) ? count : 0
+            }).ToList();
+
+            // Get TotalCount from output parameter
+            var totalCount = parameters.Get<int>("@TotalCount");
+
+            return (orders, totalCount);
+        }
+        finally
+        {
+            if (!wasOpen && connection.State == System.Data.ConnectionState.Open)
+            {
+                await connection.CloseAsync();
+            }
+        }
     }
 }
 

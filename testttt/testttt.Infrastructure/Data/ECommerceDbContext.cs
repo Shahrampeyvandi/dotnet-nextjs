@@ -18,6 +18,7 @@ public class ECommerceDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Log> Logs { get; set; }
+    public DbSet<OtpCode> OtpCodes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -125,6 +126,18 @@ public class ECommerceDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.LogEvent).HasColumnType("nvarchar(max)");
             entity.HasIndex(e => e.TimeStamp);
             entity.HasIndex(e => e.Level);
+        });
+
+        // OtpCode configuration
+        modelBuilder.Entity<OtpCode>(entity =>
+        {
+            entity.ToTable("OtpCodes");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.PhoneNumber).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(10);
+            entity.Property(e => e.Purpose).HasMaxLength(50);
+            entity.HasIndex(e => new { e.PhoneNumber, e.Purpose, e.CreatedAt });
+            entity.HasIndex(e => new { e.PhoneNumber, e.Code, e.Purpose });
         });
     }
 }

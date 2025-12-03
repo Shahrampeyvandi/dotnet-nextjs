@@ -113,11 +113,15 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LogoutPath = "/api/Auth/logout";
 });
 
+// Add MediatR for event-driven architecture
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(testttt.Application.Services.OtpService).Assembly));
+
 // Register Repositories
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<testttt.Application.Interfaces.IOtpRepository, testttt.Infrastructure.Repositories.OtpRepository>();
 // IUserRepository removed - using Identity UserManager instead
 
 // Register Unit of Work
@@ -128,6 +132,9 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<testttt.Application.Interfaces.IOtpService, testttt.Application.Services.OtpService>();
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<testttt.Application.Interfaces.ISmsService, testttt.Application.Services.SmsService>();
 // IUserService removed - using Identity UserManager and SignInManager instead
 
 // Add CORS
