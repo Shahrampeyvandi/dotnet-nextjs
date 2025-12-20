@@ -1,0 +1,114 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "view": "View",
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "success": "Success",
+    "error": "Error",
+    "operations": "Operations",
+    "status": "Status",
+    "date": "Date",
+    "amount": "Amount",
+    "orderNumber": "Order Number"
+  },
+  "dashboard": {
+    "title": "User Dashboard",
+    "logout": "Logout",
+    "userInfo": "User Information",
+    "orders": "Orders",
+    "viewAll": "View All",
+    "viewProducts": "View Products",
+    "cart": "Shopping Cart",
+    "recentOrders": "Recent Orders",
+    "noOrders": "You haven't placed any orders yet",
+    "editProfile": "Edit Profile",
+    "adminPanel": "Admin Panel"
+  },
+  "editProfile": {
+    "title": "Edit Profile",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "city": "City",
+    "postalCode": "Postal Code",
+    "updateSuccess": "Profile updated successfully"
+  },
+  "currency": {
+    "toman": "Toman"
+  },
+  "navigation": {
+    "home": "Home",
+    "products": "Products",
+    "cart": "Cart",
+    "dashboard": "Dashboard",
+    "adminPanel": "Admin Panel",
+    "storeName": "Online Store"
+  },
+  "admin": {
+    "panelTitle": "Admin Panel",
+    "title": "Admin Panel - User Role Management",
+    "userManagement": "User Management",
+    "customers": "Customers",
+    "orders": "Orders",
+    "usersList": "Users List",
+    "username": "Username",
+    "name": "Name",
+    "email": "Email",
+    "currentRoles": "Current Roles",
+    "addRole": "Add Role",
+    "removeRole": "Remove Role",
+    "selectRole": "Select Role...",
+    "noRoles": "No Roles",
+    "errorLoadingUsers": "Error loading users",
+    "errorLoadingRoles": "Error loading roles",
+    "errorLoadingData": "Error loading data",
+    "errorAddingRole": "Error adding role",
+    "errorRemovingRole": "Error removing role",
+    "roleAddedSuccess": "Role \"{role}\" added to user successfully",
+    "roleRemovedSuccess": "Role \"{role}\" removed from user successfully",
+    "confirmRemoveRole": "Are you sure you want to remove role \"{role}\" from this user?"
+  },
+  "order": {
+    "orderDetails": "Order Details",
+    "orderNotFound": "Order not found",
+    "backToOrders": "Back to Orders",
+    "orderInformation": "Order Information",
+    "orderNumber": "Order Number",
+    "shippingInformation": "Shipping Information",
+    "customer": "Customer",
+    "email": "Email",
+    "address": "Address",
+    "products": "Products",
+    "product": "Product",
+    "unitPrice": "Unit Price",
+    "quantity": "Quantity",
+    "total": "Total",
+    "currency": "Toman",
+    "statusUpdatedSuccess": "Order status updated successfully",
+    "statusUpdateError": "Error updating order status",
+    "status": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    }
+  },
+  "adminOrders": {
+    "title": "Orders Management",
+    "errorLoadingOrders": "Error loading orders",
+    "previous": "Previous",
+    "next": "Next",
+    "showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "results": "results"
+  }
+}
+

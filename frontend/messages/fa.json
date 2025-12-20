@@ -1,0 +1,114 @@
+{
+  "common": {
+    "save": "ذخیره",
+    "cancel": "انصراف",
+    "edit": "ویرایش",
+    "delete": "حذف",
+    "view": "مشاهده",
+    "loading": "در حال بارگذاری...",
+    "saving": "در حال ذخیره...",
+    "success": "موفق",
+    "error": "خطا",
+    "operations": "عملیات",
+    "status": "وضعیت",
+    "date": "تاریخ",
+    "amount": "مبلغ",
+    "orderNumber": "شماره سفارش"
+  },
+  "dashboard": {
+    "title": "داشبورد کاربری",
+    "logout": "خروج",
+    "userInfo": "اطلاعات کاربری",
+    "orders": "سفارشات",
+    "viewAll": "مشاهده همه",
+    "viewProducts": "مشاهده محصولات",
+    "cart": "سبد خرید",
+    "recentOrders": "آخرین سفارشات",
+    "noOrders": "هنوز سفارشی ثبت نکرده‌اید",
+    "editProfile": "ویرایش اطلاعات",
+    "adminPanel": "پنل مدیریت"
+  },
+  "editProfile": {
+    "title": "ویرایش اطلاعات",
+    "firstName": "نام",
+    "lastName": "نام خانوادگی",
+    "email": "ایمیل",
+    "phone": "تلفن",
+    "address": "آدرس",
+    "city": "شهر",
+    "postalCode": "کد پستی",
+    "updateSuccess": "اطلاعات با موفقیت به‌روزرسانی شد"
+  },
+  "currency": {
+    "toman": "تومان"
+  },
+  "navigation": {
+    "home": "خانه",
+    "products": "محصولات",
+    "cart": "سبد خرید",
+    "dashboard": "داشبورد",
+    "adminPanel": "پنل مدیریت",
+    "storeName": "فروشگاه آنلاین"
+  },
+  "admin": {
+    "panelTitle": "پنل مدیریت",
+    "title": "پنل مدیریت - مدیریت نقش‌های کاربران",
+    "userManagement": "مدیریت کاربران",
+    "customers": "مشتریان",
+    "orders": "سفارشات",
+    "usersList": "لیست کاربران",
+    "username": "نام کاربری",
+    "name": "نام",
+    "email": "ایمیل",
+    "currentRoles": "نقش‌های فعلی",
+    "addRole": "افزودن نقش",
+    "removeRole": "حذف نقش",
+    "selectRole": "انتخاب نقش...",
+    "noRoles": "بدون نقش",
+    "errorLoadingUsers": "خطا در بارگذاری کاربران",
+    "errorLoadingRoles": "خطا در بارگذاری نقش‌ها",
+    "errorLoadingData": "خطا در بارگذاری اطلاعات",
+    "errorAddingRole": "خطا در افزودن نقش",
+    "errorRemovingRole": "خطا در حذف نقش",
+    "roleAddedSuccess": "نقش \"{role}\" با موفقیت به کاربر اضافه شد",
+    "roleRemovedSuccess": "نقش \"{role}\" با موفقیت از کاربر حذف شد",
+    "confirmRemoveRole": "آیا از حذف نقش \"{role}\" از این کاربر اطمینان دارید؟"
+  },
+  "adminOrders": {
+    "title": "مدیریت سفارشات",
+    "errorLoadingOrders": "خطا در بارگذاری سفارشات",
+    "previous": "قبلی",
+    "next": "بعدی",
+    "showing": "نمایش",
+    "to": "تا",
+    "of": "از",
+    "results": "نتیجه"
+  },
+  "order": {
+    "orderDetails": "جزئیات سفارش",
+    "orderNotFound": "سفارش یافت نشد",
+    "backToOrders": "بازگشت به لیست سفارشات",
+    "orderInformation": "اطلاعات سفارش",
+    "orderNumber": "شماره سفارش",
+    "shippingInformation": "اطلاعات ارسال",
+    "customer": "مشتری",
+    "email": "ایمیل",
+    "address": "آدرس",
+    "products": "محصولات",
+    "product": "محصول",
+    "unitPrice": "قیمت واحد",
+    "quantity": "تعداد",
+    "total": "مجموع",
+    "currency": "تومان",
+    "statusUpdatedSuccess": "وضعیت سفارش با موفقیت به‌روزرسانی شد",
+    "statusUpdateError": "خطا در به‌روزرسانی وضعیت سفارش",
+    "status": {
+      "pending": "در انتظار",
+      "processing": "در حال پردازش",
+      "shipped": "ارسال شده",
+      "delivered": "تحویل داده شده",
+      "cancelled": "لغو شده"
+    }
+  }
+}
+
