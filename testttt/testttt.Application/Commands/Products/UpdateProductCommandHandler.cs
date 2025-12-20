@@ -36,6 +36,9 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         product.Name = request.Name;
         product.Description = request.Description;
         product.Price = request.Price;
+        product.DiscountPercentage = request.DiscountPercentage;
+        product.DiscountStartDate = request.DiscountStartDate;
+        product.DiscountEndDate = request.DiscountEndDate;
         product.StockQuantity = request.StockQuantity;
         product.ImageUrl = request.ImageUrl;
         product.IsActive = request.IsActive;

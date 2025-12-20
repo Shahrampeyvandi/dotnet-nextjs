@@ -19,12 +19,30 @@ public static class MappingProfile
 
     public static ProductDto ToDto(this Product product)
     {
+        var now = DateTime.UtcNow;
+        var hasActiveDiscount = product.DiscountPercentage.HasValue &&
+                                product.DiscountPercentage.Value > 0 &&
+                                (!product.DiscountStartDate.HasValue || product.DiscountStartDate.Value <= now) &&
+                                (!product.DiscountEndDate.HasValue || product.DiscountEndDate.Value >= now);
+
+        decimal? finalPrice = null;
+        if (hasActiveDiscount && product.DiscountPercentage.HasValue)
+        {
+            var discountAmount = product.Price * (product.DiscountPercentage.Value / 100m);
+            finalPrice = product.Price - discountAmount;
+        }
+
         return new ProductDto
         {
             Id = product.Id,
             Name = product.Name,
             Description = product.Description,
             Price = product.Price,
+            DiscountPercentage = product.DiscountPercentage,
+            DiscountStartDate = product.DiscountStartDate,
+            DiscountEndDate = product.DiscountEndDate,
+            FinalPrice = finalPrice,
+            HasActiveDiscount = hasActiveDiscount,
             StockQuantity = product.StockQuantity,
             ImageUrl = product.ImageUrl,
             IsActive = product.IsActive,

@@ -40,9 +40,14 @@ public class ECommerceDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Description).HasMaxLength(2000);
             entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.DiscountPercentage).HasColumnType("decimal(5,2)");
+            entity.Property(e => e.DiscountStartDate).HasColumnType("datetime2");
+            entity.Property(e => e.DiscountEndDate).HasColumnType("datetime2");
             entity.Property(e => e.StockQuantity).HasDefaultValue(0);
             entity.HasIndex(e => e.Name);
             entity.HasIndex(e => e.CategoryId);
+            entity.HasIndex(e => e.DiscountStartDate);
+            entity.HasIndex(e => e.DiscountEndDate);
 
             entity.HasOne(e => e.Category)
                 .WithMany(c => c.Products)

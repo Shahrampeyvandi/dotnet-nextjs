@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using testttt.Application.DTOs;
+using testttt.Application.Extensions;
 using testttt.Application.Interfaces;
 
 namespace testttt.Presentation.Controllers;
@@ -65,7 +66,8 @@ public class CartController : ControllerBase
             var product = await _productRepository.GetByIdAsync(item.Key);
             if (product != null && product.IsActive)
             {
-                var itemTotal = product.Price * item.Value;
+                var actualPrice = product.GetDiscountedPrice();
+                var itemTotal = actualPrice * item.Value;
                 totalAmount += itemTotal;
                 totalItems += item.Value;
 
@@ -73,7 +75,7 @@ public class CartController : ControllerBase
                 {
                     ProductId = product.Id,
                     ProductName = product.Name,
-                    Price = product.Price,
+                    Price = actualPrice,
                     Quantity = item.Value,
                     TotalPrice = itemTotal,
                     ImageUrl = product.ImageUrl

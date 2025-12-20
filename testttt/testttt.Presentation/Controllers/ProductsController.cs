@@ -26,6 +26,25 @@ public class ProductsController : ControllerBase
         return Ok(products);
     }
 
+    // GET: api/Products/paginated?pageNumber=1&pageSize=10&categoryId=1&includeInactive=false
+    [HttpGet("paginated")]
+    public async Task<ActionResult<PaginatedResponse<ProductDto>>> GetPaginatedProducts(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] int? categoryId = null,
+        [FromQuery] bool includeInactive = false)
+    {
+        var query = new GetPaginatedProductsQuery
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            CategoryId = categoryId,
+            IncludeInactive = includeInactive
+        };
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
     // GET: api/Products/5
     [HttpGet("{id}")]
     public async Task<ActionResult<ProductDto>> GetProduct(int id)
@@ -52,6 +71,9 @@ public class ProductsController : ControllerBase
                 Name = createDto.Name,
                 Description = createDto.Description,
                 Price = createDto.Price,
+                DiscountPercentage = createDto.DiscountPercentage,
+                DiscountStartDate = createDto.DiscountStartDate,
+                DiscountEndDate = createDto.DiscountEndDate,
                 StockQuantity = createDto.StockQuantity,
                 ImageUrl = createDto.ImageUrl,
                 IsActive = createDto.IsActive,
@@ -82,6 +104,9 @@ public class ProductsController : ControllerBase
                 Name = updateDto.Name,
                 Description = updateDto.Description,
                 Price = updateDto.Price,
+                DiscountPercentage = updateDto.DiscountPercentage,
+                DiscountStartDate = updateDto.DiscountStartDate,
+                DiscountEndDate = updateDto.DiscountEndDate,
                 StockQuantity = updateDto.StockQuantity,
                 ImageUrl = updateDto.ImageUrl,
                 IsActive = updateDto.IsActive,

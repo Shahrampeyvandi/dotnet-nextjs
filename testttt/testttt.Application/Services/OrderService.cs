@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using testttt.Application.DTOs;
+using testttt.Application.Extensions;
 using testttt.Application.Interfaces;
 using testttt.Application.Mappings;
 using testttt.Domain.Entities;
@@ -61,16 +62,17 @@ public class OrderService : IOrderService
             var (orders, totalCount) = await _orderRepository.GetPaginatedWithDetailsAsync(pageNumber, pageSize);
             var orderList = orders.ToList();
 
-            _logger.LogInformation("Retrieved {Count} orders (page {PageNumber} of {TotalPages})", 
-                orderList.Count, pageNumber, (int)Math.Ceiling(totalCount / (double)pageSize));
+            var response = PaginatedResponse<OrderListDto>.Create(
+                orderList,
+                pageNumber,
+                pageSize,
+                totalCount
+            );
 
-            return new PaginatedResponse<OrderListDto>
-            {
-                Data = orderList,
-                PageNumber = pageNumber,
-                PageSize = pageSize,
-                TotalCount = totalCount
-            };
+            _logger.LogInformation("Retrieved {Count} orders (page {PageNumber} of {TotalPages}). Range: {Range}", 
+                orderList.Count, pageNumber, response.TotalPages, response.GetRangeString());
+
+            return response;
         }
         catch (Exception ex)
         {
@@ -187,7 +189,7 @@ public class OrderService : IOrderService
                         $"Insufficient stock for product {product.Name}. Available: {product.StockQuantity}, Requested: {itemDto.Quantity}");
                 }
 
-                var unitPrice = product.Price;
+                var unitPrice = product.GetDiscountedPrice();
                 var totalPrice = unitPrice * itemDto.Quantity;
                 totalAmount += totalPrice;
 
