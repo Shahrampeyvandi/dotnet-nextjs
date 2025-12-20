@@ -34,6 +34,14 @@ public class UpdateOrderCommandHandler : IRequestHandler<UpdateOrderCommand, Uni
         order.ShippingAddress = request.ShippingAddress;
         order.UpdatedAt = DateTime.UtcNow;
 
+        if (order.Status == "Cancelled")
+        {
+            foreach (var orderItem in order.OrderItems)
+            {
+                orderItem.Product.RealizeQuantity(orderItem.Quantity);
+            }
+        }
+
         await _orderRepository.UpdateAsync(order);
         await _unitOfWork.SaveChangesAsync();
 
